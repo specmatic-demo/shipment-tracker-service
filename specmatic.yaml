@@ -15,6 +15,9 @@ components:
     centralContractRepo:
       git:
         url: https://github.com/specmatic-demo/central-contract-repository
+    notificationServiceRepo:
+      git:
+        url: https://github.com/specmatic-demo/notification-service
   services:
     shipmentTrackerService:
       description: "Shipment Tracker Service"
@@ -30,10 +33,10 @@ components:
       definitions:
         - definition:
             source:
-              $ref: "#/components/sources/centralContractRepo"
+              $ref: "#/components/sources/notificationServiceRepo"
             specs:
               - spec:
-                  path: "contracts/services/notification-service/http/openapi.yaml"
+                  path: "specs/openapi.yaml"
   runOptions:
     shipmentTrackerService:
       asyncapi:
