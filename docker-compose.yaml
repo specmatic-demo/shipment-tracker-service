@@ -3,6 +3,8 @@ services:
     build: .
     container_name: shipment-tracker-service
     restart: unless-stopped
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     depends_on:
       kafka:
         condition: service_healthy
