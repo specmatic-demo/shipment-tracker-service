@@ -37,6 +37,8 @@ components:
             specs:
               - spec:
                   path: "specs/openapi.yaml"
+              - spec:
+                  path: "specs/asyncapi.yaml"
   runOptions:
     shipmentTrackerService:
       asyncapi:
@@ -51,3 +53,8 @@ components:
         type: mock
         host: localhost
         port: 5113
+      asyncapi:
+        type: mock
+        servers:
+          - host: localhost:5413
+            protocol: kafka

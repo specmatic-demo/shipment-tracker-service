@@ -2,6 +2,7 @@ import express, { type Request, type Response } from 'express';
 import { Kafka, type Consumer, type Producer } from 'kafkajs';
 import type {
   NotificationDispatchRequest,
+  ShippingShippedNotificationEvent,
   ShipmentStatus,
   ShipmentStatusChanged,
   ShipmentStatusRealtime
@@ -15,6 +16,7 @@ const kafkaBrokers = (process.env.SHIPMENT_TRACKER_KAFKA_BROKERS || 'localhost:9
   .filter(Boolean);
 const kafkaTopic = process.env.SHIPMENT_STATUS_CHANGED_TOPIC || 'shipment.status.changed';
 const realtimeKafkaTopic = process.env.SHIPMENT_STATUS_REALTIME_TOPIC || 'shipment.status.realtime';
+const notificationShippingTopic = process.env.NOTIFICATION_SHIPPING_TOPIC || 'shipping.shipped';
 const notificationBaseUrl = process.env.NOTIFICATION_BASE_URL || 'http://localhost:5113';
 
 const app = express();
@@ -96,6 +98,26 @@ async function publishRealtimeEvent(event: ShipmentStatusRealtime): Promise<void
   });
 }
 
+function toShippingNotificationEvent(value: ShipmentStatusChanged): ShippingShippedNotificationEvent {
+  return {
+    eventId: value.eventId,
+    orderId: value.orderId,
+    shipmentId: value.shipmentId,
+    status: value.status,
+    title: `Shipment ${value.status}`,
+    body: `Shipment ${value.shipmentId} for order ${value.orderId} is ${value.status}`,
+    priority: value.status === 'FAILED' ? 'HIGH' : 'NORMAL',
+    occurredAt: value.occurredAt
+  };
+}
+
+async function publishShippingNotificationEvent(event: ShippingShippedNotificationEvent): Promise<void> {
+  await producer.send({
+    topic: notificationShippingTopic,
+    messages: [{ key: event.shipmentId, value: JSON.stringify(event) }]
+  });
+}
+
 async function sendNotification(event: ShipmentStatusRealtime): Promise<void> {
   const request: NotificationDispatchRequest = {
     userId: `order-${event.orderId}`,
@@ -119,7 +141,9 @@ async function sendNotification(event: ShipmentStatusRealtime): Promise<void> {
 
 async function handleStatusChanged(event: ShipmentStatusChanged): Promise<void> {
   const realtimeEvent = toRealtimeEvent(event);
+  const shippingNotificationEvent = toShippingNotificationEvent(event);
   await publishRealtimeEvent(realtimeEvent);
+  await publishShippingNotificationEvent(shippingNotificationEvent);
   rememberEvent(realtimeEvent);
   await sendNotification(realtimeEvent);
 }

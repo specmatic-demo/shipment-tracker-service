@@ -1,16 +1,17 @@
 # shipment-tracker-service
 
-This repository currently provides its own specs from the central contract repository.
+This is a hybrid provider repository.
 
-Its `notification-service` OpenAPI dependency is consumed from the `migrated_to_federated_repo` branch of:
+It provides the AsyncAPI contract stored in the central contract repository at:
 
-- `https://github.com/specmatic-demo/notification-service`
+- `contracts/services/shipment-tracker-service/events/asyncapi.yaml`
 
-The consumed spec path is:
+It consumes the following dependency from `https://github.com/specmatic-demo/notification-service`:
 
-- `specs/openapi.yaml`
+- `notification-service` OpenAPI at `specs/openapi.yaml`
+- `notification-service` AsyncAPI at `specs/asyncapi.yaml`
 
-## Start the dependency mock
+## Start dependency mocks
 
 Run this from the `shipment-tracker-service` repository root:
 
@@ -24,7 +25,10 @@ docker run --rm -it \
   mock
 ```
 
-This starts the `notification-service` OpenAPI mock on `localhost:5113`.
+This starts the `notification-service` mocks declared in [specmatic.yaml](/Users/jaydeep/znsio/specmatic-demo/shipment-tracker-service/specmatic.yaml):
+
+- OpenAPI mock on `localhost:5113`
+- AsyncAPI mock on `localhost:5413`
 
 ## Start the service
 
@@ -39,7 +43,12 @@ This starts:
 - `shipment-tracker-service` on `localhost:9012`
 - Kafka on `localhost:5413`
 
-The service expects the `notification-service` mock to already be running at `localhost:5113`.
+The local Kafka setup creates these topics used by the service:
+
+- `shipment.status.changed`
+- `shipment.status.realtime`
+
+The service consumes shipment status changes from Kafka, publishes realtime shipment updates to Kafka, publishes `shipping.shipped` events for `notification-service`, and calls the `notification-service` HTTP API at `localhost:5113`.
 
 ## Run contract tests
 

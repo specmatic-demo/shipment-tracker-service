@@ -24,6 +24,17 @@ export type ShipmentStatusRealtime = {
   eta?: string;
 };
 
+export type ShippingShippedNotificationEvent = {
+  eventId: string;
+  orderId: string;
+  shipmentId: string;
+  status: ShipmentStatus;
+  title: string;
+  body: string;
+  priority?: 'LOW' | 'NORMAL' | 'HIGH';
+  occurredAt: string;
+};
+
 export type NotificationDispatchRequest = {
   userId: string;
   channel: 'EMAIL' | 'SMS' | 'PUSH' | 'IN_APP';
